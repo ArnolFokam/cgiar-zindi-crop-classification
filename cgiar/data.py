@@ -77,7 +77,7 @@ class CGIARDataset(Dataset):
                  root_dir: pathlib.Path, 
                  split: str ='train', 
                  transform=None,
-                 initial_size : int = 512):
+                 initial_image_size : int = 512):
         """
         Args:
             root_dir (pathlib.Path): Root directory containing all the image files.
@@ -102,10 +102,11 @@ class CGIARDataset(Dataset):
         
         self.images = {}
         
+        # Load all the images into memory
         for idx, row in tqdm(self.df.iterrows(), total=len(self.df)):
             image_path = self.images_dir / row['filename']
             image = Image.open(image_path)
-            image = resize(image, initial_size)
+            image = resize(image, initial_image_size)
             self.images[idx] = image
 
     def __len__(self):
