@@ -21,8 +21,9 @@ def run():
     SEED=42
     LR=1e-4
     EPOCHS=40
+    INITIAL_IMAGE_SIZE=512
     IMAGE_SIZE=224
-    TRAIN_BATCH_SIZE=64
+    TRAIN_BATCH_SIZE=128
     TEST_BATCH_SIZE=32
 
     DATA_DIR=get_dir('data')
@@ -40,16 +41,25 @@ def run():
         
     # Define transform for image preprocessing
     transform = transforms.Compose([
-        transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+        transforms.RandomResizedCrop(IMAGE_SIZE),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
     # Create instances of CGIARDataset for training and testing
-    train_dataset = CGIARDataset(root_dir=DATA_DIR, split='train', transform=transform)
+    train_dataset = CGIARDataset(
+        split='train', 
+        root_dir=DATA_DIR, 
+        transform=transform,
+        initial_image_size=INITIAL_IMAGE_SIZE,
+    )
 
     # Create DataLoader instances
-    train_loader = DataLoader(train_dataset, batch_size=TRAIN_BATCH_SIZE, shuffle=True)
+    train_loader = DataLoader(
+        train_dataset, 
+        batch_size=TRAIN_BATCH_SIZE, 
+        shuffle=True
+    )
 
     # Initialize the regression model
     model = Resnet50_V1()
