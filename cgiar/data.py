@@ -77,7 +77,7 @@ class CGIARDataset(Dataset):
                  root_dir: pathlib.Path, 
                  split: str ='train', 
                  transform=None,
-                 initial_size : int =512):
+                 initial_size : int = 512):
         """
         Args:
             root_dir (pathlib.Path): Root directory containing all the image files.

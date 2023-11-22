@@ -52,11 +52,12 @@ def download_files(s3_client, bucket_name, local_path, file_names, folders):
         )
 
 if __name__ == "__main__":
+    bucket_name = "cgiar-crop-damage-classification-challenge"
     client = boto3.client('s3', config=Config(signature_version=UNSIGNED))
-    file_names, folders = get_file_folders(client, 'eyes-on-the-ground')
+    file_names, folders = get_file_folders(client, bucket_name)
     download_files(
         client,
-        "eyes-on-the-ground",
+        bucket_name,
         './data',
         file_names,
         folders
