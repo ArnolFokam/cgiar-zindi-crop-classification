@@ -1,9 +1,10 @@
-from collections import defaultdict
 import torch
 import random
+import argparse
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from collections import defaultdict
 
 import torch.nn as nn
 from torch import optim
@@ -15,19 +16,36 @@ from cgiar.model import Resnet50_V1
 from cgiar.utils import get_dir, time_activity
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='CGIAR Model Training and Evaluation')
+    parser.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
+    parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
+    parser.add_argument('--epochs', type=int, default=40, help='Number of training epochs')
+    parser.add_argument('--initial_image_size', type=int, default=512, help='Initial image size')
+    parser.add_argument('--image_size', type=int, default=224, help='Image size for training')
+    parser.add_argument('--train_batch_size', type=int, default=64, help='Batch size for training')
+    parser.add_argument('--test_batch_size', type=int, default=32, help='Batch size for testing')
+    parser.add_argument('--subfolder', type=str, default="#1", help='Index of the learning rate')
+
+    args = parser.parse_args()
+    return args
+
 def run():
+    args = parse_args()
     
-    # Define hyperparameters
-    SEED=42
-    LR=1e-4
-    EPOCHS=40
-    INITIAL_IMAGE_SIZE=512
-    IMAGE_SIZE=224
-    TRAIN_BATCH_SIZE=64
-    TEST_BATCH_SIZE=32
+    # Use args instead of hard-coded values
+    SEED = args.seed
+    LR = args.lr
+    EPOCHS = args.epochs
+    INITIAL_IMAGE_SIZE = args.initial_image_size
+    IMAGE_SIZE = args.image_size
+    TRAIN_BATCH_SIZE = args.train_batch_size
+    TEST_BATCH_SIZE = args.test_batch_size
 
     DATA_DIR=get_dir('data')
-    OUTPUT_DIR=get_dir('solutions/manuel/v1')
+    OUTPUT_DIR=get_dir('solutions/manuel/v1') / args.subfolder
+    
+    print(f"Saving things to {OUTPUT_DIR}")
 
     # ensure reproducibility
     random.seed(SEED)
