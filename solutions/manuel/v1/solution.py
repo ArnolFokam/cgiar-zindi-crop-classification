@@ -1,14 +1,18 @@
 import torch
-from torchvision.transforms import transforms
-from torch.utils.data import DataLoader
-from torch import optim
-import matplotlib.pyplot as plt
+import random
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+
 import torch.nn as nn
+from torch import optim
+from torch.utils.data import DataLoader
+from torchvision.transforms import transforms
 
 from cgiar.data import CGIARDataset
 from cgiar.model import Resnet50_V1
 from cgiar.utils import get_dir, time_activity
+
 
 if __name__ == "__main__":
     # Define hyperparameters
@@ -20,9 +24,11 @@ if __name__ == "__main__":
     TEST_BATCH_SIZE=32
 
     DATA_DIR=get_dir('data')
-    OUTPUT_DIR=get_dir('solutions/v1')
+    OUTPUT_DIR=get_dir('solutions/manuel/v1')
 
     # ensure reproducibility
+    random.seed(SEED)
+    np.random.seed(SEED)
     torch.manual_seed(SEED)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
@@ -48,7 +54,7 @@ if __name__ == "__main__":
     model = model.to(device)
 
     # Define loss function (mean squared error) and optimizer (e.g., Adam)
-    criterion = nn.MSELoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=LR)
 
     model.train()

@@ -19,7 +19,6 @@ class Resnet50_V1(nn.Module):
             nn.Linear(num_features, 512),
             nn.ReLU(),
             nn.Linear(512, 5),
-            nn.Sigmoid()
         )
 
     def forward(self, x):
