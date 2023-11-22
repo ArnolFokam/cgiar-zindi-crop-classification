@@ -1,3 +1,4 @@
+from collections import defaultdict
 import torch
 import random
 import numpy as np
@@ -14,11 +15,12 @@ from cgiar.model import Resnet50_V1
 from cgiar.utils import get_dir, time_activity
 
 
-if __name__ == "__main__":
+def run():
+    
     # Define hyperparameters
     SEED=42
     LR=1e-4
-    EPOCHS=20
+    EPOCHS=40
     IMAGE_SIZE=224
     TRAIN_BATCH_SIZE=64
     TEST_BATCH_SIZE=32
@@ -68,10 +70,10 @@ if __name__ == "__main__":
         
         with time_activity(f'Epoch [{epoch+1}/{EPOCHS}]'):
         
-            for _, images, extents in train_loader:
+            for _, images, damages in train_loader:
                 optimizer.zero_grad()
                 outputs = model(images.to(device))
-                loss = criterion(outputs.squeeze(), extents.to(device).squeeze())
+                loss = criterion(outputs, damages.to(device))
                 loss.backward()
                 optimizer.step()
                 
@@ -95,34 +97,26 @@ if __name__ == "__main__":
     
     # evaluation
     model.eval()
-    
-    train_predictions = []
-    
-    # get and save the train predictions
-    with torch.no_grad():
-        for ids, images, _ in train_loader:
-            outputs = model(images.to(device))
-            outputs = outputs.squeeze().tolist()
-            train_predictions.extend(list(zip(ids, outputs)))
-    
-    train_dataset.df['predicted_extent'] = train_dataset.df['ID'].map(dict(train_predictions))
-    train_dataset.df.to_csv(OUTPUT_DIR / 'train_predictions.csv', index=False)
 
+    # make predictions on the test set
     test_dataset = CGIARDataset(root_dir=DATA_DIR, split='test', transform=transform)
     test_loader = DataLoader(test_dataset, batch_size=TEST_BATCH_SIZE, shuffle=False)
     predictions = []
 
     with torch.no_grad():
         for ids, images, _ in test_loader:
-            outputs = model(images.to(device))
-            outputs = outputs.squeeze().tolist()
+            outputs = torch.sigmoid(model(images.to(device)))
+            outputs = outputs.tolist()
             predictions.extend(list(zip(ids, outputs)))
+            
+    test_predictions = defaultdict(lambda: [0, 0, 0, 0, 0])
+    test_predictions.update(dict(predictions))
 
     # load the sample submission file and update the extent column with the predictions
-    submission_df = pd.read_csv('data/SampleSubmission.csv')
+    submission_df = pd.read_csv(DATA_DIR / 'SampleSubmission.csv')
 
     # update the extent column with the predictions
-    submission_df['extent'] = submission_df['ID'].map(dict(predictions))
+    submission_df.loc[:, test_dataset.columns] = submission_df['ID'].map(test_predictions).to_list()
 
     # save the submission file and trained model
     submission_df.to_csv(OUTPUT_DIR / 'submission.csv', index=False)

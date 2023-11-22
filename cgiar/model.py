@@ -22,5 +22,4 @@ class Resnet50_V1(nn.Module):
         )
 
     def forward(self, x):
-        x = self.cnn(x)
         return self.cnn(x)

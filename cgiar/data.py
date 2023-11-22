@@ -71,7 +71,7 @@ class CGIARDataset(Dataset):
         "test": "Test"
     }
     
-    columns = ["ID", "filename", "growth_stage", "extent", "season"]
+    columns = ["DR", "G", "ND", "WD", "other"]
     
     def __init__(self, 
                  root_dir: pathlib.Path, 
@@ -84,13 +84,20 @@ class CGIARDataset(Dataset):
             split (string): Split name ('train', 'test', etc.) to determine the CSV file.
             transform (callable, optional): Optional transform to be applied to the image.
         """
-        self.images_dir = get_dir(root_dir) / split
+        self.images_dir = get_dir(root_dir) / "images"
         self.transform = transform
         self.split = split
 
         # Determine the CSV file path based on the split
         self.df = pd.read_csv(root_dir / f'{self.split_to_csv_filename[split]}.csv')
-        # self.df = self.df.iloc[:50, :]
+        
+        # Concatenate the one-hot encoded 
+        # DataFrame with the original DataFrame
+        if self.split == "train":
+            self.df = pd.concat([
+                self.df,
+                pd.get_dummies(self.df['damage'])
+            ], axis=1)
         
         
         self.images = {}
@@ -110,12 +117,12 @@ class CGIARDataset(Dataset):
         if self.transform:
             image = self._transform_image(image)
         
-        extent = -1
+        damage = [-1]
         if self.split == "train":
-            extent = self.df.iloc[idx, self.columns.index("extent")]
+            damage = self.df.iloc[idx, self.df.columns.get_indexer(self.columns)]
         
-        extent = torch.FloatTensor([extent])
-        return self.df.iloc[idx, self.columns.index("ID")], image, extent
+        damage = torch.FloatTensor(damage)
+        return self.df['ID'].iat[idx], image, damage
     
     def _transform_image(self, image):
         return self.transform(image)
