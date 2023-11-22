@@ -5,3 +5,5 @@ dist/
 data/
 *.pt
 *.pth
+
+.vscode/
