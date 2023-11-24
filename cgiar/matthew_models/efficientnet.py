@@ -1,12 +1,11 @@
-import torch
+import timm
 import torch.nn as nn
-import torchvision.models as models
 
-class DenseNet_Custom(nn.Module):
+class EfficientNetB4_Custom(nn.Module):
     def __init__(self):
-        super(DenseNet_Custom, self).__init__()
-        # Load a DenseNet model
-        self.cnn = models.densenet201(pretrained=True)  # Set pretrained=False if training from scratch - changed to 201
+        super(EfficientNetB4_Custom, self).__init__()
+        # Load a pre-trained EfficientNet-B4 model
+        self.cnn = timm.create_model('tf_efficientnet_b4_ns', pretrained=True)
 
         # Modify the classifier layer
         num_features = self.cnn.classifier.in_features

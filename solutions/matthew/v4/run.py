@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 
 from cgiar.data import CGIARDataset
-from cgiar.matthew_models.densenet import DenseNet_Custom
+from cgiar.matthew_models.efficientnet import EfficientNetB4_Custom
 from cgiar.utils import get_dir, time_activity
 
 def parse_args():
@@ -43,7 +43,7 @@ def run():
     TEST_BATCH_SIZE = args.test_batch_size
 
     DATA_DIR=get_dir('data')
-    OUTPUT_DIR=get_dir('solutions/matthew/v1', args.subfolder)
+    OUTPUT_DIR=get_dir('solutions/matthew/v4', args.subfolder)
     
     print(f"Saving things to {OUTPUT_DIR}")
 
@@ -54,11 +54,16 @@ def run():
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     
-        # Define transform for image preprocessing
     transform = transforms.Compose([
-        transforms.RandomResizedCrop(IMAGE_SIZE),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    transforms.RandomResizedCrop(IMAGE_SIZE),
+    transforms.RandomHorizontalFlip(p=0.2),  # Random horizontal flip
+    transforms.RandomVerticalFlip(p=0.2),    # Random vertical flip
+    transforms.RandomRotation(degrees=15),    # Random rotation between -15 to 15 degrees
+    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color jitter
+    transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),  # Minor affine shifts
+    transforms.ToTensor(),
+    transforms.Lambda(lambda x: x + torch.randn_like(x) * 0.02),  # Adding Gaussian noise
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalization
     ])
 
     # Create instances of CGIARDataset for training and testing
@@ -80,7 +85,7 @@ def run():
 
     # Initialize the regression model
     # model = Resnet50_V1()
-    model = DenseNet_Custom()
+    model = EfficientNetB4_Custom()
     model = model.to(device)
 
     # Define loss function (mean squared error) and optimizer (e.g., Adam)
@@ -144,14 +149,12 @@ def run():
                     epoch_val_loss += loss.item()
 
         # Calculate average loss over all folds
-        avg_epoch_loss = epoch_loss / len(train_dataset)
-        avg_epoch_val_loss = epoch_val_loss / len(train_dataset)
+        avg_epoch_loss = epoch_loss / len(train_loader.dataset)
+        avg_epoch_val_loss = epoch_val_loss / len(val_loader.dataset)
         print(f'\t Train Loss {avg_epoch_loss}')
         print(f'\t Validation Loss {avg_epoch_val_loss}')
         val_losses.append(avg_epoch_val_loss)
         losses.append(avg_epoch_loss)
-        print(f'Train Loss: {avg_epoch_loss}')
-        print(f'Val Loss: {avg_epoch_val_loss}')
 
         # Early stopping logic
         if avg_epoch_val_loss < lowest_loss:

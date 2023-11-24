@@ -5,8 +5,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from collections import defaultdict
-from sklearn.model_selection import KFold
-import copy
+
 import torch.nn as nn
 from torch import optim
 from torch.utils.data import DataLoader
@@ -43,7 +42,7 @@ def run():
     TEST_BATCH_SIZE = args.test_batch_size
 
     DATA_DIR=get_dir('data')
-    OUTPUT_DIR=get_dir('solutions/matthew/v1', args.subfolder)
+    OUTPUT_DIR=get_dir('solutions/matthew/v3', args.subfolder)
     
     print(f"Saving things to {OUTPUT_DIR}")
 
@@ -90,96 +89,38 @@ def run():
     model.train()
 
     losses = []  # List to store loss values
-    val_losses = []
 
-    # KFold cross-validator
-    k_folds = 5
-    kfold = KFold(n_splits=k_folds, shuffle=True)
-
-    best_model_wts = None
-    lowest_loss = float('inf')
-    patience = 3  # Number of epochs with no improvement after which training will be stopped
-    patience_counter = 0
-
+    # Training loop for regression model
     for epoch in range(EPOCHS):
-        print(f'Epoch [{epoch+1}/{EPOCHS}]')
+        
         epoch_loss = 0.0
-        epoch_val_loss = 0.0
-
-        # Loop through folds
-        for fold, (train_ids, val_ids) in enumerate(kfold.split(train_dataset)):
-            print(f'  FOLD {fold}')
-            print('  --------------------------------')
-
-            train_subsampler = torch.utils.data.SubsetRandomSampler(train_ids)
-            val_subsampler = torch.utils.data.SubsetRandomSampler(val_ids)
-
-            train_loader = DataLoader(
-                train_dataset, 
-                batch_size=TRAIN_BATCH_SIZE, 
-                sampler=train_subsampler
-            )
-            val_loader = DataLoader(
-                train_dataset, 
-                batch_size=TEST_BATCH_SIZE, 
-                sampler=val_subsampler
-            )
-
-            # Training loop
-            model.train()
+        
+        with time_activity(f'Epoch [{epoch+1}/{EPOCHS}]'):
+        
             for _, images, damages in train_loader:
                 optimizer.zero_grad()
                 outputs = model(images.to(device))
                 loss = criterion(outputs, damages.to(device))
                 loss.backward()
                 optimizer.step()
+                
                 epoch_loss += loss.item()
-
-            # Validation loop
-            model.eval()
-            with torch.no_grad():
-                for _, images, damages in val_loader:
-                    outputs = model(images.to(device))
-                    loss = criterion(outputs, damages.to(device))
-                    epoch_val_loss += loss.item()
-
-        # Calculate average loss over all folds
-        avg_epoch_loss = epoch_loss / len(train_dataset)
-        avg_epoch_val_loss = epoch_val_loss / len(train_dataset)
-        print(f'\t Train Loss {avg_epoch_loss}')
-        print(f'\t Validation Loss {avg_epoch_val_loss}')
-        val_losses.append(avg_epoch_val_loss)
-        losses.append(avg_epoch_loss)
-        print(f'Train Loss: {avg_epoch_loss}')
-        print(f'Val Loss: {avg_epoch_val_loss}')
-
-        # Early stopping logic
-        if avg_epoch_val_loss < lowest_loss:
-            lowest_loss = avg_epoch_val_loss
-            best_model_wts = copy.deepcopy(model.state_dict())
-            patience_counter = 0
-        else:
-            patience_counter += 1
-            if patience_counter >= patience:
-                print('Early stopping triggered')
-                break
-
-    # Load best model weights
-    if best_model_wts:
-        model.load_state_dict(best_model_wts)
-        torch.save(model.state_dict(), OUTPUT_DIR / 'best_model.pt')
+                
+            # Calculate average epoch loss
+            avg_epoch_loss = epoch_loss / len(train_loader)
+            losses.append(avg_epoch_loss)
+        
+            print(f'Loss: {avg_epoch_loss}')
+    
+    torch.save(model.state_dict(), OUTPUT_DIR / 'model.pt')
         
     # Plot the loss curve
-    try:
-        plt.plot(range(1, len(losses)+1), losses)
-        # plt.plot(range(1, len(losses)+1), losses)
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.title('Training Loss')
-        plt.grid(True)
-        plt.savefig(OUTPUT_DIR / 'train_loss.png')
-    except:
-        print("issue with image generation")
+    plt.plot(range(1, EPOCHS+1), losses)
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training Loss')
+    plt.grid(True)
+    plt.savefig(OUTPUT_DIR / 'train_loss.png')
     
     # evaluation
     model.eval()
