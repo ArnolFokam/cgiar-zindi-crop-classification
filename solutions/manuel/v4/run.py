@@ -129,9 +129,21 @@ def run():
     
     # evaluation
     model.eval()
+    
+    test_transform = transforms.Compose([
+        transforms.Resize(IMAGE_SIZE),
+        transforms.CenterCrop(IMAGE_SIZE),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], 
+                             std=[0.229, 0.224, 0.225])
+    ])
 
     # make predictions on the test set
-    test_dataset = CGIARDataset(root_dir=DATA_DIR, split='test', transform=transform)
+    test_dataset = CGIARDataset(
+        root_dir=DATA_DIR, 
+        split='test', 
+        transform=test_transform
+    )
     test_loader = DataLoader(test_dataset, batch_size=TEST_BATCH_SIZE, shuffle=False)
     predictions = []
 
