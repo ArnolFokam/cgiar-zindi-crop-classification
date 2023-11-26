@@ -87,7 +87,7 @@ class CGIARDataset(Dataset):
         self.split = split
 
         # Determine the CSV file path based on the split
-        self.df = pd.read_csv(root_dir / f'{self.split_to_csv_filename[split]}.csv')[:512]
+        self.df = pd.read_csv(root_dir / f'{self.split_to_csv_filename[split]}.csv')
         
         # Concatenate the one-hot encoded 
         # DataFrame with the original DataFrame
