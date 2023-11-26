@@ -6,8 +6,6 @@ from torchvision import transforms
 
 from PIL import Image
 import torch
-import cv2
-import random
 import torchvision.transforms.functional as F
 import torch.nn as nn
 from tqdm import tqdm
@@ -89,7 +87,7 @@ class CGIARDataset(Dataset):
         self.split = split
 
         # Determine the CSV file path based on the split
-        self.df = pd.read_csv(root_dir / f'{self.split_to_csv_filename[split]}.csv')
+        self.df = pd.read_csv(root_dir / f'{self.split_to_csv_filename[split]}.csv')[:512]
         
         # Concatenate the one-hot encoded 
         # DataFrame with the original DataFrame

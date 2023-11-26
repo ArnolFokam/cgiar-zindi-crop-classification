@@ -43,7 +43,7 @@ def run():
     TEST_BATCH_SIZE = args.test_batch_size
 
     DATA_DIR=get_dir('data')
-    OUTPUT_DIR=get_dir('solutions/manuel/v2', args.subfolder)
+    OUTPUT_DIR=get_dir('solutions/manuel/v4', args.subfolder)
     
     print(f"Saving things to {OUTPUT_DIR}")
 
