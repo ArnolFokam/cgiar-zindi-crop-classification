@@ -73,11 +73,7 @@ class CGIARDataset(Dataset):
     
     columns = ["DR", "G", "ND", "WD", "other"]
     
-    def __init__(self, 
-                 root_dir: pathlib.Path, 
-                 split: str ='train', 
-                 transform=None,
-                 initial_image_size : int = 512):
+    def __init__(self, root_dir, split='train', transform=None, initial_image_size=512, additional_data=None):
         """
         Args:
             root_dir (pathlib.Path): Root directory containing all the image files.
@@ -87,6 +83,10 @@ class CGIARDataset(Dataset):
         self.images_dir = get_dir(root_dir) / "images"
         self.transform = transform
         self.split = split
+        self.additional_images = []
+        self.additional_labels = []
+        if additional_data is not None and split == "train":
+            self._add_additional_data(additional_data)
 
         # Determine the CSV file path based on the split
         self.df = pd.read_csv(root_dir / f'{self.split_to_csv_filename[split]}.csv')
@@ -109,21 +109,33 @@ class CGIARDataset(Dataset):
             image = resize(image, initial_image_size)
             self.images[idx] = image
 
+    def _add_additional_data(self, additional_data):
+        additional_images, additional_labels = additional_data
+
+        for image, label in zip(additional_images, additional_labels):
+            # Process each additional image and label
+            self.additional_images.append(image)
+            self.additional_labels.append(torch.FloatTensor(label))
+
     def __len__(self):
-        return len(self.df)
+        return len(self.df) + len(self.additional_images)
 
     def __getitem__(self, idx):
-        image = self.images[idx]
-        
+        if idx < len(self.df):
+            # Original data
+            image = self.images[idx]
+            damage = self.df.iloc[idx, self.df.columns.get_indexer(self.columns)]
+        else:
+            # Additional data
+            idx -= len(self.df)
+            image = self.additional_images[idx]
+            damage = self.additional_labels[idx]
+
         if self.transform:
             image = self._transform_image(image)
-        
-        damage = [-1]
-        if self.split == "train":
-            damage = self.df.iloc[idx, self.df.columns.get_indexer(self.columns)]
-        
+
         damage = torch.FloatTensor(damage)
-        return self.df['ID'].iat[idx], image, damage
+        return image, damage
     
     def _transform_image(self, image):
         return self.transform(image)

@@ -1,0 +1,21 @@
+[Timing] Training & Submission started.
+Saving things to solutions/matthew/v9/#1
+[Timing] Epoch [1/40] started.
+Train Loss: 0.3503029143517734
+Validation Loss: 0.2913373090738168
+[Timing] Epoch [1/40] finished (Took 148.08s).
+[Timing] Epoch [2/40] started.
+Train Loss: 0.2869570743452552
+Validation Loss: 0.27330757119904264
+[Timing] Epoch [2/40] finished (Took 147.90s).
+[Timing] Epoch [3/40] started.
+Train Loss: 0.27274205064846696
+Validation Loss: 0.2716129405732535
+[Timing] Epoch [3/40] finished (Took 148.17s).
+[Timing] Epoch [4/40] started.
+Train Loss: 0.26344548229790904
+Validation Loss: 0.2638315575802984
+[Timing] Epoch [4/40] finished (Took 148.00s).
+[Timing] Epoch [5/40] started.
+[Timing] Epoch [5/40] finished (Took 148.16s).
+[Timing] Training & Submission finished (Took 1470.09s).

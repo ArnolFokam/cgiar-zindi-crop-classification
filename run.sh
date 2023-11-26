@@ -9,9 +9,9 @@
 # specify the job name
 #SBATCH -J cgiar
 # specify the filen1ame to be used for writing output
-#SBATCH -o /home-mscluster/mkruger/GitHub/cgiar-zindi-crop-classification/logs/dense_drop_cross.%N.%j.out
+#SBATCH -o /home-mscluster/mkruger/GitHub/cgiar-zindi-crop-classification/logs/dense_fixed_train.%N.%j.out
 # specify the filename for stderr
-#SBATCH -e /home-mscluster/mkruger/GitHub/cgiar-zindi-crop-classification/logs/dense_drop_cross.%N.%j.err
+#SBATCH -e /home-mscluster/mkruger/GitHub/cgiar-zindi-crop-classification/logs/dense_fixed_train.%N.%j.err
 
 
 source ~/.bashrc
