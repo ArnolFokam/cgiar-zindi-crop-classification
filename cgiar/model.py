@@ -32,8 +32,6 @@ class TIMM_Model(nn.Module):
             pretrained=pretrained
         )
         
-        print(self.model)
-        
         if any([model_name.startswith(n) for n in ['efficientnet']]):
             num_features = self.model.classifier.in_features
             self.model.classifier = nn.Sequential(
