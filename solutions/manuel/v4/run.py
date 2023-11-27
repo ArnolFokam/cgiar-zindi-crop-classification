@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('--initial_image_size', type=int, default=512, help='Initial image size')
     parser.add_argument('--image_size', type=int, default=224, help='Image size for training')
     parser.add_argument('--train_batch_size', type=int, default=64, help='Batch size for training')
-    parser.add_argument('--test_batch_size', type=int, default=32, help='Batch size for testing')
+    parser.add_argument('--test_batch_size', type=int, default=128, help='Batch size for testing')
     parser.add_argument('--subfolder', type=str, default="#1", help='Index of the learning rate')
     args = parser.parse_args()
     return args
@@ -126,6 +126,12 @@ def run():
     plt.title('Training Loss')
     plt.grid(True)
     plt.savefig(OUTPUT_DIR / 'train_loss.png')
+    
+    model = TIMM_Model(
+        model_name=args.model_name,
+    )
+    model.load_state_dict(torch.load(OUTPUT_DIR / 'model.pt'))
+    model = model.to(device)
     
     # evaluation
     model.eval()
