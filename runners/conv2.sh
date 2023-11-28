@@ -18,5 +18,5 @@ source ~/.bashrc
 # cd /home-mscluster/mkruger/RoboCup
 conda activate cgiar
 cd /home-mscluster/mkruger/GitHub/cgiar-zindi-crop-classification
-python3 -u matthew_main.py --model_name "convnextv2_base.fcmae_ft_in22k_in1k_384"&
+python3 -u matthew_main.py --model_name "convnextv2_tiny.fcmae"&
 wait;
