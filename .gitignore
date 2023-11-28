@@ -5,6 +5,7 @@ dist/
 data/
 *.pt
 *.pth
-
+*.sh
+logs/
 .vscode/
 *_private*
