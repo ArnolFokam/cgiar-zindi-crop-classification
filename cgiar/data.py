@@ -89,6 +89,15 @@ class CGIARDataset(Dataset):
         # Determine the CSV file path based on the split
         self.df = pd.read_csv(root_dir / f'{self.split_to_csv_filename[split]}.csv')
         
+        self.images = {}
+        
+        # Load all the images into memory
+        for idx, row in tqdm(self.df.iterrows(), total=len(self.df)):
+            image_path = self.images_dir / row['filename']
+            image = Image.open(image_path)
+            image = resize(image, initial_image_size)
+            self.images[idx] = image
+            
         # Concatenate the one-hot encoded 
         # DataFrame with the original DataFrame
         if self.split == "train":
@@ -96,7 +105,55 @@ class CGIARDataset(Dataset):
                 self.df,
                 pd.get_dummies(self.df['damage'])
             ], axis=1)
+
+    def __len__(self):
+        return len(self.df)
+
+    def __getitem__(self, idx):
+        image = self.images[idx]
         
+        if self.transform:
+            image = self._transform_image(image)
+        
+        damage = [-1]
+        if self.split == "train":
+            damage = self.df.iloc[idx, self.df.columns.get_indexer(self.columns)]
+        
+        damage = torch.FloatTensor(damage)
+        return self.df['ID'].iat[idx], image, damage
+    
+    def _transform_image(self, image):
+        return self.transform(image)
+
+
+class CGIARDatasetV2(Dataset):
+    """Pytorch data class"""
+    
+    # get the csv file name from the split
+    split_to_csv_filename = {
+        "train": "Train",
+        "test": "Test"
+    }
+    
+    columns = ["DR", "G", "ND", "WD", "other"]
+    
+    def __init__(self, 
+                 root_dir: pathlib.Path, 
+                 split: str ='train', 
+                 transform=None,
+                 initial_image_size : int = 512):
+        """
+        Args:
+            root_dir (pathlib.Path): Root directory containing all the image files.
+            split (string): Split name ('train', 'test', etc.) to determine the CSV file.
+            transform (callable, optional): Optional transform to be applied to the image.
+        """
+        self.images_dir = get_dir(root_dir) / "images"
+        self.transform = transform
+        self.split = split
+
+        # Determine the CSV file path based on the split
+        self.df = pd.read_csv(root_dir / f'{self.split_to_csv_filename[split]}.csv')
         
         self.images = {}
         
@@ -116,11 +173,10 @@ class CGIARDataset(Dataset):
         if self.transform:
             image = self._transform_image(image)
         
-        damage = [-1]
+        damage = -1
         if self.split == "train":
-            damage = self.df.iloc[idx, self.df.columns.get_indexer(self.columns)]
+            damage = self.columns.index(self.df.iloc[idx]['damage'])
         
-        damage = torch.FloatTensor(damage)
         return self.df['ID'].iat[idx], image, damage
     
     def _transform_image(self, image):
